@@ -20,9 +20,9 @@ class RPN(nn.Module):
         raise NotImplementedError
 
 class UPChannelRPN(RPN):
+    # Used in the SiamRPN
     def __init__(self, anchor_num=5, feature_in=256):
         super(UPChannelRPN, self).__init__()
-
         cls_output = 2 * anchor_num
         loc_output = 4 * anchor_num
 
@@ -52,6 +52,7 @@ class UPChannelRPN(RPN):
 
 
 class DepthwiseXCorr(nn.Module):
+    # Used in the SiamRPN++
     def __init__(self, in_channels, hidden, out_channels, kernel_size=3, hidden_kernel_size=5):
         super(DepthwiseXCorr, self).__init__()
         self.conv_kernel = nn.Sequential(
@@ -96,6 +97,7 @@ class MultiRPN(RPN):
     def __init__(self, anchor_num, in_channels, weighted=False):
         super(MultiRPN, self).__init__()
         self.weighted = weighted
+        # Using multi DepthwiseRPN
         for i in range(len(in_channels)):
             self.add_module('rpn'+str(i+2),
                     DepthwiseRPN(anchor_num, in_channels[i], in_channels[i]))

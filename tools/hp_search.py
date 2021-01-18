@@ -16,7 +16,7 @@ from pysot.utils.model_load import load_pretrain
 from pysot.core.config import cfg
 
 torch.set_num_threads(1)
-
+cuda_device = 0
 
 def parse_range(range_str):
     param = map(float, range_str.split(','))
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     model = ModelBuilder()
 
     # load model
-    model = load_pretrain(model, args.snapshot).cuda().eval()
+    model = load_pretrain(model, args.snapshot).cuda(cuda_device).eval()
 
     # build tracker
     tracker = build_tracker(model)

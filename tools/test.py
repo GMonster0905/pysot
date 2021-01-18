@@ -20,7 +20,6 @@ from pysot.utils.model_load import load_pretrain
 from toolkit.datasets import DatasetFactory
 from toolkit.utils.region import vot_overlap, vot_float2str
 
-
 parser = argparse.ArgumentParser(description='siamrpn tracking')
 parser.add_argument('--dataset', type=str,
         help='datasets')
@@ -35,7 +34,7 @@ parser.add_argument('--vis', action='store_true',
 args = parser.parse_args()
 
 torch.set_num_threads(1)
-
+cuda_device = 0
 def main():
     # load config
     cfg.merge_from_file(args.config)
@@ -47,7 +46,7 @@ def main():
     model = ModelBuilder()
 
     # load model
-    model = load_pretrain(model, args.snapshot).cuda().eval()
+    model = load_pretrain(model, args.snapshot).cuda(cuda_device).eval()
 
     # build tracker
     tracker = build_tracker(model)
@@ -71,6 +70,11 @@ def main():
             toc = 0
             pred_bboxes = []
             for idx, (img, gt_bbox) in enumerate(video):
+                """
+                print("*"*40)
+                print(idx + 1)
+                print(img.shape)
+                """
                 if len(gt_bbox) == 4:
                     gt_bbox = [gt_bbox[0], gt_bbox[1],
                        gt_bbox[0], gt_bbox[1]+gt_bbox[3]-1,

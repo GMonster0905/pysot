@@ -12,6 +12,7 @@ from pysot.tracker.siamrpn_tracker import SiamRPNTracker
 
 
 class SiamRPNLTTracker(SiamRPNTracker):
+    # SiamRPN Long-term
     def __init__(self, model):
         super(SiamRPNLTTracker, self).__init__(model)
         self.longterm_state = False

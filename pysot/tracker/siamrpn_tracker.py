@@ -92,6 +92,7 @@ class SiamRPNTracker(SiameseTracker):
 
     def track(self, img):
         """
+        Inference as one-shot detection in SiamRPN paper.
         args:
             img(np.ndarray): BGR image
         return:
@@ -131,6 +132,10 @@ class SiamRPNTracker(SiameseTracker):
         # window penalty
         pscore = pscore * (1 - cfg.TRACK.WINDOW_INFLUENCE) + \
             self.window * cfg.TRACK.WINDOW_INFLUENCE
+        
+        # This step can be seen as NMS step in detection.
+        # because of only foreground and background two class
+        # in object tracking problem setting
         best_idx = np.argmax(pscore)
 
         bbox = pred_bbox[:, best_idx] / scale_z
@@ -156,6 +161,8 @@ class SiamRPNTracker(SiameseTracker):
                 width,
                 height]
         best_score = score[best_idx]
+        # the return box is the final box
+        # estimated for every frame.
         return {
                 'bbox': bbox,
                 'best_score': best_score

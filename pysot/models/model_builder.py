@@ -10,6 +10,8 @@ import torch.nn.functional as F
 
 from pysot.core.config import cfg
 from pysot.models.loss import select_cross_entropy_loss, weight_l1_loss
+# The get_... function is in the __init__.py  of 
+# the corresponding module
 from pysot.models.backbone import get_backbone
 from pysot.models.head import get_rpn_head, get_mask_head, get_refine_head
 from pysot.models.neck import get_neck
@@ -45,6 +47,8 @@ class ModelBuilder(nn.Module):
         if cfg.MASK.MASK:
             zf = zf[-1]
         if cfg.ADJUST.ADJUST:
+            # Solving the imbalance problem
+            # Adjust before DWXcorr
             zf = self.neck(zf)
         self.zf = zf
 
@@ -54,7 +58,10 @@ class ModelBuilder(nn.Module):
             self.xf = xf[:-1]
             xf = xf[-1]
         if cfg.ADJUST.ADJUST:
+            # Solving the imbalance probelm
+            # Adjust before DWXcorr
             xf = self.neck(xf)
+        # Pass through the RPN head
         cls, loc = self.rpn_head(self.zf, xf)
         if cfg.MASK.MASK:
             mask, self.mask_corr_feature = self.mask_head(self.zf, xf)
@@ -77,6 +84,7 @@ class ModelBuilder(nn.Module):
     def forward(self, data):
         """ only used in training
         """
+        # Forward method is only used for training
         template = data['template'].cuda()
         search = data['search'].cuda()
         label_cls = data['label_cls'].cuda()
@@ -84,18 +92,25 @@ class ModelBuilder(nn.Module):
         label_loc_weight = data['label_loc_weight'].cuda()
 
         # get feature
+        # When len(BACKBONE.used_layers)>1
+        # the total dim of output feature is 5
+        # the first dim represents the 
+        # different level features
         zf = self.backbone(template)
         xf = self.backbone(search)
         if cfg.MASK.MASK:
+            # Used in SiamMask
             zf = zf[-1]
             self.xf_refine = xf[:-1]
             xf = xf[-1]
         if cfg.ADJUST.ADJUST:
+            # Solving the imbalance problem
+            # Adjust before DWXCorr
             zf = self.neck(zf)
             xf = self.neck(xf)
         cls, loc = self.rpn_head(zf, xf)
 
-        # get loss
+        # Get loss
         cls = self.log_softmax(cls)
         cls_loss = select_cross_entropy_loss(cls, label_cls)
         loc_loss = weight_l1_loss(loc, label_loc, label_loc_weight)

@@ -11,7 +11,7 @@ import torch
 
 from pysot.core.config import cfg
 
-
+cuda_device = 0
 class BaseTracker(object):
     """ Base tracker of single objec tracking
     """
@@ -91,5 +91,5 @@ class SiameseTracker(BaseTracker):
         im_patch = im_patch.astype(np.float32)
         im_patch = torch.from_numpy(im_patch)
         if cfg.CUDA:
-            im_patch = im_patch.cuda()
+            im_patch = im_patch.cuda(cuda_device)
         return im_patch

@@ -6,6 +6,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from yacs.config import CfgNode as CN
+# yacs.cofig source code
+# https://detectron2.readthedocs.io/_modules/yacs/config.html
 
 __C = CN()
 
@@ -244,6 +246,7 @@ __C.ANCHOR.SCALES = [8]
 
 # Anchor number
 __C.ANCHOR.ANCHOR_NUM = len(__C.ANCHOR.RATIOS) * len(__C.ANCHOR.SCALES)
+# default anchor_num 5
 
 
 # ------------------------------------------------------------------------ #

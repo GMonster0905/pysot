@@ -63,6 +63,7 @@ def build_data_loader():
     train_sampler = None
     if get_world_size() > 1:
         train_sampler = DistributedSampler(train_dataset)
+    # torch Dataloader
     train_loader = DataLoader(train_dataset,
                               batch_size=cfg.TRAIN.BATCH_SIZE,
                               num_workers=cfg.TRAIN.NUM_WORKERS,

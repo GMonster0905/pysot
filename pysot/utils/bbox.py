@@ -63,6 +63,7 @@ def IoU(rect1, rect2):
         iou
     """
     # overlap
+    # x1.shape = (anchor_num,W,H)
     x1, y1, x2, y2 = rect1[0], rect1[1], rect1[2], rect1[3]
     tx1, ty1, tx2, ty2 = rect2[0], rect2[1], rect2[2], rect2[3]
 
@@ -78,6 +79,7 @@ def IoU(rect1, rect2):
     target_a = (tx2-tx1) * (ty2 - ty1)
     inter = ww * hh
     iou = inter / (area + target_a - inter)
+    # iou.shape = (anchor_num,W,H)
     return iou
 
 

@@ -16,6 +16,7 @@ from toolkit.utils.region import vot_overlap, vot_float2str
 from . import vot
 from .vot import Rectangle, Polygon, Point
 
+cuda_device = 0
 
 # modify root
 
@@ -25,13 +26,13 @@ cfg_file = join(cfg_root, 'config.yaml')
 
 def warmup(model):
     for i in range(10):
-        model.template(torch.FloatTensor(1,3,127,127).cuda())
+        model.template(torch.FloatTensor(1,3,127,127).cuda(cuda_device))
 
 def setup_tracker():
     cfg.merge_from_file(cfg_file)
 
     model = ModelBuilder()
-    model = load_pretrain(model, model_file).cuda().eval()
+    model = load_pretrain(model, model_file).cuda(cuda_device).eval()
 
     tracker = build_tracker(model)
     warmup(model)

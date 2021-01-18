@@ -17,11 +17,13 @@ class AnchorTarget:
         self.anchors = Anchors(cfg.ANCHOR.STRIDE,
                                cfg.ANCHOR.RATIOS,
                                cfg.ANCHOR.SCALES)
-
+        # search_size = 255, imc = 127, size = 25
         self.anchors.generate_all_anchors(im_c=cfg.TRAIN.SEARCH_SIZE//2,
                                           size=cfg.TRAIN.OUTPUT_SIZE)
 
     def __call__(self, target, size, neg=False):
+        # Reference example
+        # self.anchor_target(bbox, cfg.TRAIN.OUTPUT_SIZE, neg)
         anchor_num = len(cfg.ANCHOR.RATIOS) * len(cfg.ANCHOR.SCALES)
 
         # -1 ignore 0 negative 1 positive
@@ -36,8 +38,11 @@ class AnchorTarget:
             slt = np.arange(num)
             np.random.shuffle(slt)
             slt = slt[:keep_num]
+            # return pos and keep_num
+            # pos.shape = (3,pos_num), pos_num <= keep_num
             return tuple(p[slt] for p in position), keep_num
-
+        # convert(x1,y1,x2,y2) to (cx,cy,h,w)
+        # representing the ground-truth box
         tcx, tcy, tw, th = corner2center(target)
 
         if neg:
@@ -66,26 +71,40 @@ class AnchorTarget:
 
         anchor_box = self.anchors.all_anchors[0]
         anchor_center = self.anchors.all_anchors[1]
+        # x1.shape = (anchor_num,W,H)
         x1, y1, x2, y2 = anchor_box[0], anchor_box[1], \
             anchor_box[2], anchor_box[3]
+        # cx.shape = (anchor_num,W,H)
         cx, cy, w, h = anchor_center[0], anchor_center[1], \
             anchor_center[2], anchor_center[3]
-
+        # delta.shape = (4,anchor_num,W,H)
         delta[0] = (tcx - cx) / w
         delta[1] = (tcy - cy) / h
         delta[2] = np.log(tw / w)
         delta[3] = np.log(th / h)
-
+        # overlap.shape = (anchor_num,W,H)
         overlap = IoU([x1, y1, x2, y2], target)
 
         pos = np.where(overlap > cfg.TRAIN.THR_HIGH)
         neg = np.where(overlap < cfg.TRAIN.THR_LOW)
-
+        # pos.shape = (3,pos_num)
         pos, pos_num = select(pos, cfg.TRAIN.POS_NUM)
         neg, neg_num = select(neg, cfg.TRAIN.TOTAL_NUM - cfg.TRAIN.POS_NUM)
 
         cls[pos] = 1
         delta_weight[pos] = 1. / (pos_num + 1e-6)
+        # the cls head train with postive and negtive pairs
+        # But the reg head only train with postive pairs(the delta_weight
+        # of negetive pairs is 0), the STOA anchor-free tracking method
+        # called OCEAN solved this problem.
+
+        # But this problem can be solved in other methods besides OCEAN
+        # like piecewise function notation of IOU. 
 
         cls[neg] = 0
+        
+        # cls.shape = (k,w,h)
+        # delta.shape = (4,k,w,h)
+        # delta_weight = (k,w,h) , every anchor has a delta_weight
+
         return cls, delta, delta_weight, overlap
